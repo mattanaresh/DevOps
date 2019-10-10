@@ -1,0 +1,110 @@
+In VM we do virtualization using hypervisor.
+Docker is the sotware that allows to run container.
+It is not good idea to host DB in contaier. If cotainer is dead then we will loose all the data. Hence, we just host the application.
+We cannot run os in detached mode as OS is plain and there will be no process running in it. There should be atleast a process running to run image as container.
+When we run image then it becomes container.Otw, it remains as image.
+Image has a layered structure like Centos, java, tomcat etc.
+We can launch a container in a interactive ot detached mode.
+Images are immutable. we cannot edit any image but allows us to take a image, run as container and save as new image. 
+
+Commands:
+service docker status ---> Tells whether docker is up and running
+docker pull nginx ---> To pull rom docker hub
+docker images ---> List out the pulled images
+docker run -d -P nginx ---> To run container
+docker ps ---> List out the running containers
+docker exec -it cdf8f3b48d2b cat /etc/os-release ---> To check the details of the nginx server. Also, to enetr into the running container. 
+docker stop nginx ---> graceul stop but stop and kill do the same. just stops the contaier
+docker kill nginx ---> stops abruptly
+docker history ngnix ---> is the command by using which we can see how image is created.
+docker cp is command to copy file from container to local vice versa.
+
+If someone removes running container after doing some changes all our changes will be lost. We can create our own image as below with the changes we done.
+Creating a new image from running container:
+Since the container is already running, we can only enter into the container using the command docker exec <contaier_id> <command to execute>
+Then save the container as a new image. docker commit -m "new file created" <container_id> <new_image_name>
+By doing above, if someone remove the old container, since we already have a new image ready, we can launch a container.
+This is how we can create a new own image in manual process.
+
+We can create a new image by pulling lite wait OS, run in interactive mode and save it as new image or refer Creating new image section:
+
+Images can be created in 2 ways:
+1. Manual: (We need to build up our image manually. Below is the manual process of creating a image).
+	We need to write requirement as below:
+		centos: Launch centos in interactive mode.
+		java: do changes like instal java, tomcat etc.
+		tomcat: save as a new image. When the container is saved, it creates a new image. We can now launch a new contaier using the newly created image.
+2. Automation:
+
+
+
+
+
+
+Creating new Image:
+1. Create a Dockerfile as below and save it. By doing below, we will get updated ubuntu image with curl & vim installed.
+FROM ubuntu (First or base layer of the image)
+MAINTAINER "Naresh"
+RUN apt-get update
+RUN apt-get install -y curl vim
+
+2. docker build is the command using which we can create a new image using Dockerfile; -t means tag
+docker build -t ubuntu:v2 <current_path> (or)
+docker build -t ubuntu:v2 -f <docker_custom_filename> <current_path>
+
+This is how we can create a new image with out creating a container or entering into it.
+
+We need to rename the image to push into docker hub: docker tag <image_name> <dockerhub_userid>/<repository_name>:v1
+Then push to docker hub. First login to docker using command docker login and then push using the command docker push <dockerhub_userid>/<repository_name>:v1
+In organisations, we use docker trusted repositories to upload images so that they are not accessible to outside world.
+
+If we stop cotainer using stop or kill some one can restart them back and there is a chance of running old code if we restart them back. so better we use docker rm <contaier_id> if we do not need that contaier at all.
+
+
+we cannot change image once it is created. rather, run the image as contaier and once the contaier is up and running, then make your changes and create it as a new image
+
+
+
+
+Docker Volume:
+Volume is helpful to share the data from local to container & vice versa.
+
+Suppose, we have a machine we need to install OS, docker and then create an image. Suppose, we have a data inside a container and if contaier is hung or crashed all of a suddenn. In that case we cannot use docker cp also to get the data from that contaier. So, there should be a action to preserve the data as there will be some important config files. We need a permanent machanism so that what ever the data that is getting generated in the container and if we can copy  that to local machine then even container crashed then our data will be secured. 
+
+Whatever the folder we are creating on the host machine to save the data from the contaier is called as volume. Volume is nothing but the mount thet we create on our local machine where we have to transfer data from container to volume. It works 2ways: we can transer data from container to host or vice versa.
+
+docker volume create my-vol
+
+After creating above volume, it sits at /var/lib/docker/volume
+
+We can run a container in the particular volume. Suppose if we create a file under volume folder and attach that particular volume to a container, those files will be shared to container. We cannot attach volume to a contaier once it is launched. So, the best practice is launch a container along with the volume.
+
+docker run -d -P -v <volume_name>:<Path_where_we_need_to_copy_the_data_to_container> <image_name>
+
+Other way of creating volume:
+Create 2 separate index.html in 2 different folder once containing Welcome to dev & Welcome to prod env. To display 2 different messages in dev & prod we need not create 2 diefferent images to display different messages. We can use same image but when we launch it as a container, we can replace the required files, parameters during the container invocation.
+
+docker run -d -P --name devngnix -v  <Path_where_folders_are_created>:<Path_where_we_need_to_copy_the_data_to_container> <image_name>
+
+Here we need not create volume, we can directly map the folder created on local machine.
+
+Docker Compose:
+Docker Compose is a utility using which we can run a multiple contaiers at a time. Compose follows a declrative syntax. By deault, compose has the name docker-compose.yml
+
+create a yml file and use following command to launch a contaier.
+docker-compose -f <yml_file_name> up --scale web=4(no.of times to launch container) -d
+
+We can scale down the containers as well. Just change the number web=2. It automatically scales down the remaining containers.
+
+To run multiple images as contaiers use following command:
+docker-compose -f <yml_file_name> -p webapps up -d --scale web=4 --scale app=4
+
+webapp is the name that is given to the complete above stack
+
+Dis-advantages of compose:
+When we run multiple containeres, they all run on single machine. Resource utilization is very high and if that machine goes down we cannot access that application. In organisations it is not the right way of running containers in production. To overcome this Docker Swarm comes into the picture. 
+
+Docker Swarm:
+It is a orchestrization mechanism in docker which means it manages our contaiers or run containes in a better way. 
+
+To have high availability of containers, we need to scale up or env to multiple nodes. We need to take multiple server machines and all these machines connect to the main node. All this forms as a cluster which is called as Docker Swarm. 
