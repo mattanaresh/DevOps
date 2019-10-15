@@ -48,6 +48,23 @@ MAINTAINER "Naresh"
 RUN apt-get update
 RUN apt-get install -y curl vim
 
+-------------------------------------------------
+Below should be given in jenkins shell while creating job to automate the creation of Docker file.
+sudo rm /tmp/naresh/Dockerfile
+sudo rm /tmp/naresh/addressbook.war
+sudo touch /tmp/naresh/Dockerfile
+sudo chown jenkins:jenkins /tmp/naresh/Dockerfile
+sudo cp target/addressbook.war /tmp/naresh/
+sudo chown jenkins:jenkins /tmp/naresh/addressbook.war
+sudo cat <<EOT>> /tmp/naresh/Dockerfile
+FROM tomcat
+ADD addressbook.war /usr/local/tomcat/webapps
+CMD "catalina.sh" "run"
+EXPOSE 8080
+EOT
+sudo chmod 777 /tmp/naresh/Dockerfile
+sudo chmod 777 /tmp/naresh/addressbook.war
+
 2. docker build is the command using which we can create a new image using Dockerfile; -t means tag
 docker build -t ubuntu:v2 <current_path> (or)
 docker build -t ubuntu:v2 -f <docker_custom_filename> <current_path>
