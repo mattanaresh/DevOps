@@ -1,0 +1,61 @@
+CD:
+S1-First download all the plugins required for docker in jenkins.
+S2-In Manage Jenkins, under Docker Builder specify Dockefr URL as tcp://18.219.71.221:4243
+S3-In Manage Jenkins, under Cloud, Add new Cloud and save the setup.
+S4-In Jenkins dashboard, under Credentials, create a credentials so that jenkins connects to Docker Hub for iage push/pull.
+S5-Now, create required jobs like Package & Deploy which packages our code and deploys.
+
+Package:
+Create a job using following steps:
+1. Under Source Code Management, specify repoitory URL: https://github.com/mattanaresh/DevOpsClassCodes
+2. Under Build, set the mavan goal as package.
+3. Add another Build-Execute Shell and enter the steps required to create Dockerfile and save the job.
+	sudo rm /tmp/naresh/Dockerfile
+	sudo rm /tmp/naresh/addressbook.war
+	sudo touch /tmp/naresh/Dockerfile
+	sudo chown jenkins:jenkins /tmp/naresh/Dockerfile
+	sudo cp target/addressbook.war /tmp/naresh/
+	sudo chown jenkins:jenkins /tmp/naresh/addressbook.war
+	sudo cat <<EOT>> /tmp/naresh/Dockerfile
+	FROM tomcat
+	ADD addressbook.war /usr/local/tomcat/webapps
+	CMD "catalina.sh" "run"
+	EXPOSE 8080
+	EOT
+	sudo chmod 777 /tmp/naresh/Dockerfile
+	sudo chmod 777 /tmp/naresh/addressbook.war
+
+Deploy:
+1. Under Build Triggers, set the dependency by giving name under "Build after other projects are built"
+2. Under Build, add Build/Publish Docker Image and enter all required entries.
+	Dierctory for Dockerfile - /tmp/naresh
+	Cloud                    - docker (The one we created at point S3)
+	Image                    - mattanaresh/deploy:$BUILD_NUMBER
+	Check the Push Image check box.
+	Give the Registry Credentials which were created at point S4.
+3. Add another Build-Execute Shell and give the required command to run the created image as container.
+	sudo docker run -d -P mattanaresh/deploy:$BUILD_NUMBER
+
+We need to do few setings in order to start docker communicating to remote technologies.
+
+docker setup
+
+Jenkins plugins ==> docker-build-step
+
+Enabling Docker Remote API on machine where we will use to build docker images 
+
+Ubuntu 16.04
+
+	sudo vi /lib/systemd/system/docker.service   
+	ExecStart=/usr/bin/docker daemon -H fd:// -H tcp://0.0.0.0:4243		
+	systemctl daemon-reload
+	sudo service docker restart
+	
+	test: curl http://localhost:4243/version
+OR
+	vi /etc/init/docker.conf
+	DOCKER_OPTS=’-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock’
+	systemctl daemon-reload
+	sudo service docker restart
+
+By doing above steps, all the once code is commited in github, package will be created followed by creation of Dcokerfile required to create an image & once Dockerfile is created, Deploy job wil be executed which pushes the image to Docker Hub and the same is used to run as container.
