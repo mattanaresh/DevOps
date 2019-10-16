@@ -11,6 +11,7 @@ Commands:
 service docker status ---> Tells whether docker is up and running
 docker pull nginx ---> To pull rom docker hub
 docker images ---> List out the pulled images
+docmer rmi <image> <image> ---> Remove images
 docker run -d -P nginx ---> To run container
 docker ps ---> List out the running containers
 docker exec -it cdf8f3b48d2b cat /etc/os-release ---> To check the details of the nginx server. Also, to enetr into the running container. 
