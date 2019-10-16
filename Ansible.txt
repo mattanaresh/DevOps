@@ -1,0 +1,57 @@
+Configuration management tools help to perform changes on your infrastructure.
+
+Whenever we install ansible on a machine, it is called Ansible Controller.
+
+Ansible has the capability to connect to all the prod servers and then it can run the activities on all servers seamlessly without logging into theprod servers.
+Protocol we us to connect to a machine is SSH or rdp. Ansible also uses SSH to connect to prod servers to perform all the tasks.
+We need to maintain our host list on Ansible controller for connecting to machines using SSH protcol.
+Ansible is agent less. We need nnot install anything on othr servers. SSH is enough which is a default in any linux machine.
+In ansible we use yml syntax.
+We can create a AWS instances as well using Ansible.
+
+After installing ansible we need to check if following are runnign or not:
+1. SSH - service sshd status
+2. Credentails - use aws script to create credentials if using EC2 instances	.
+3. Hosts
+
+There is another type of authentication called SSH keys. Rather than exchanging username, passwords we just exchange the keys.
+ssh-keygen is the command to generate keys.leave everythnig empty then it generate keys. Now, we have to share the public key with the hosts.
+Now run: ssh-copy-id <IP_Address> - this copies public key to remote machine.
+Once done ping and check without -u & -k. It connets without asking for username and password.
+Dis-Advantages:
+We need to manually copy sh keys to all the servers.
+Any person can access the prod machines can do anything.
+There are security challanges.
+
+Only go for username and password authentication.
+
+Add IP Addresses of the host in /etc/ansible/hosts of controller.
+It is always agood practice to have your own host file instead of common host file. Create a host file as defined below:
+[web]
+IP-Addr1 ansible_ssh_user=devops ansible_ssh_pass=devops
+IP-Addr2
+   .
+   .
+   .
+IP-AddrN
+and use the command - ansible web -i <file_name> -m ping -u devops -k
+uncomment host_key_checking in /etc/ansible/ansible.cfg
+We can also customize ansible.cfg. whenever we run anisble commands it first goes to ansible.cfg. Since, everybody uses the same file, it is not a good practice to edit that file. Instead, copy that file to your path so that it takes ansible.cfg from your path or the path where you copied. Now you can change the required parameters like inventory in the config file.
+ansible all -m ping -u devops -k
+ansible all -m ping -u devops -k -vvv, it gives the log. number of v gives that many number of lines.
+ansible all -m ping -u devops -k --limit "IP_ADDRESS" - To limit the ip address.
+
+Terminology:
+Module: In linux terminoligy we call it as command
+Playbook: The yml file that we prepare with instructions is playbook. In linux we call it as shell script.
+Inventory: List of ip addresses
+Config file: Default ansible config file. always have your own copy of config and create backup of the same before editing original file.
+In few cases if host do not have open ssh then add ---> ansible web -i <file_name> -m ping -u devops -k -c paramiko to the command.
+
+ansible all -a "touch /tmp/ravifile" -u devops -k
+
+If ansible_ssh_user=devops ansible_ssh_pass=devops is added in inv file no need to give -u devops -k in the comand.
+
+If we specify username and password in the inv file and if we try to isntall software on hosts, it will fail becasue we can only install softwares using root user. So, we need to give -b in the command.
+ansible all -b -a "apt-get install nginx -y" --limit "IP_Addr"
+--limit is very inportant. If we use that we can run commands on single host and if we feel everything is fine then we can go-ahead to install on all server hosts.
