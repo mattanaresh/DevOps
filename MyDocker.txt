@@ -220,3 +220,19 @@ Docker Swarm:
 It is a orchestrization mechanism in docker which means it manages our contaiers or run containes in a better way. 
 
 To have high availability of containers, we need to scale up or env to multiple nodes. We need to take multiple server machines and all these machines connect to the main node. All this forms as a cluster which is called as Docker Swarm. 
+
+Creating communication between containers:
+Create the first container that will act as the server-sshserver
+
+# docker run -i -t -p 2222:22 --name sshserver ubuntu bash
+Create a second container that acts like an SSH client
+
+# docker run -i -t --name sshclient --link  sshserver:sshserver ubuntu bash
+Docker--link creates private channels between containers
+
+inspect your linked container with docker inspect
+
+~# docker inspect -f "{{ .HostConfig.Links }}" sshclient[/sshserver:/sshclient/sshserver]
+SSH into the SSH server with its IP
+
+#ssh root@172.17.0.3 -p 22
