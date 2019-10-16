@@ -18,6 +18,11 @@ docker stop nginx ---> graceul stop but stop and kill do the same. just stops th
 docker kill nginx ---> stops abruptly
 docker history ngnix ---> is the command by using which we can see how image is created.
 docker cp is command to copy file from container to local vice versa.
+A Docker image can be exported as an archive via the docker save command. For example:
+	docker save -o <container-export-path>.tar <container-name>
+The exported Docker image can then be imported to another Docker host via the docker load command:
+	docker load -i <container-path>.tar
+Note that this does not export data from any containers that were based on the image, just the image itself.
 
 If someone removes running container after doing some changes all our changes will be lost. We can create our own image as below with the changes we done.
 Creating a new image from running container:
@@ -36,10 +41,9 @@ Images can be created in 2 ways:
 		tomcat: save as a new image. When the container is saved, it creates a new image. We can now launch a new contaier using the newly created image.
 2. Automation:
 
+Docker Enterprise Edition provides certified Docker images and plugins. With this certification, Docker Inc. ensures that the images in question pass security and best-practice checks. In other words, they guarantee a certain baseline of reliability.
 
-
-
-
+Docker Enterprise Edition also provides Active Directory or LDAP user integration, continuous vulnerability and security scans, and container app and image management features.
 
 Creating new Image:
 1. Create a Dockerfile as below and save it. By doing below, we will get updated ubuntu image with curl & vim installed.
