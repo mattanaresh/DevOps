@@ -23,7 +23,21 @@ We need to manually copy sh keys to all the servers.
 Any person can access the prod machines can do anything.
 There are security challanges.
 
-Only go for username and password authentication.
+Only go for username and password authentication if not EC2 machines.
+
+If we are using ec2 machines as our hosts, we can also connect to them from controller using pem keys insetad of username/pwd or SSH key based authentication. For that we need to do following:
+Update ansible.cfg with private_key_file=<path_of_key_file>
+In the inventory we need to give following after host 
+ansible_ssh_user=ubuntu ansible_python_interpreter=/usr/bin/python3
+Example: 
+[web]
+IP-Addr1 ansible_ssh_user=ubuntu ansible_python_interpreter=/usr/bin/python3
+IP-Addr2
+   .
+   .
+   .
+IP-AddrN
+
 
 Add IP Addresses of the host in /etc/ansible/hosts of controller.
 It is always agood practice to have your own host file instead of common host file. Create a host file as defined below:
@@ -55,3 +69,106 @@ If ansible_ssh_user=devops ansible_ssh_pass=devops is added in inv file no need 
 If we specify username and password in the inv file and if we try to isntall software on hosts, it will fail becasue we can only install softwares using root user. So, we need to give -b in the command.
 ansible all -b -a "apt-get install nginx -y" --limit "IP_Addr"
 --limit is very inportant. If we use that we can run commands on single host and if we feel everything is fine then we can go-ahead to install on all server hosts.
+
+ansible all -m setup gives all the information of remote sysytems under ansible_facts.
+
+If we want to run multiple tasks at a time we can go for playbook.
+It is configuration, deployment and orchesrization language.
+At baic level, playbooks can be used to manage configuration of and deployments to remote machines.
+
+Every playbooks starts with --- though it is not mandatory but yml follows this syntax.
+-hosts:PROD - checks for the PROD group in our inventory file like where we need to deploy.
+
+to run playbook: ansible-playbook <name>
+
+When we use become: yes in playbook, it converts as root user and then executes tasks to performing system level activities.
+copy:
+ src: /temp/naresh.txt
+ dest: /temp
+
+file:
+ path: /tmp/newfolder
+ state: directory
+
+file:
+ path: /tmp/file.txt
+ state: touch
+
+stae absent is used to delete files/folders.
+file:
+ path: /tmp/file.txt
+ state: absent
+
+In ansible we can define variables using vars module:
+vars:
+  PACKAGE: Classpackage
+  X: GM
+
+If we need topring the value of above variables, we need to give {{PACKAGE}}, {{x}}
+when we want to use msg multiple times, it consider others as duplicates. it takes the reent one into consideration. if we want to use both we use conditions in ansible.
+- hosts: aws
+  tasks:
+    - name: Run a loop
+      debug:
+        msg: "{{item}}"
+      with_items:
+        - one
+        - two
+        - three
+        - Four
+
+- hosts: aws
+  become: yes
+  tasks:
+    - name: find the files
+      find:
+        paths: '/opt'
+        patterns: "*.log"
+      register: out
+
+    - name: remove the files
+      file:
+        path: "{{item.path}}"
+        state: absent
+      with_items: "{{out.files}}" 
+out is a variable in the ansible where output is saved using register module.
+
+when is the keyword in anisble just like IF block.
+
+ansible doc-l list all the modules of ansible.
+
+Creating AWS instances using ansible playbook:
+easy_install pip
+pip install awscli
+pip install boto
+aws --version
+
+Now create a user in aws for command line access. 
+go to IAM in aws
+goto users --> create user --> uername --> Access type - programatic access ->next -> attach existing policy - ec2full acess -> skip -> Create user.
+now run the command "aws configure" and copy access_id, key from aws console
+now aws fro mcommand line can communicate to aws console.
+now we are ready to run instructions to manage aws from controller.
+aws ec2 describe-instances --output table
+Running a playbook to create instances in AWS.
+vi ec2.yml
+- name: Create EC2 Instance
+  hosts: localhost
+  tasks:
+    - ec2:
+        key_name: <keyname>
+        instance_type: t2.micro
+        image: <image_name>
+        wait: yes
+        group: <security_grp_name>
+        count: 2
+        vpc_subnet_id: <subnet_id>
+        assign_public_ip: yes
+        region: <region_name>
+      register: out
+
+    - debug:
+        msg: "{{out}}"
+
+Ansible Role:
+we seggregate play book into several pieces.
