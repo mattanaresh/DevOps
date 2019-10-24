@@ -3,9 +3,9 @@
   tasks:
     - name: Login to Docker Hub registry
       docker_login:
-        email: "mattanaresh.mn@gmail.com"
-        username: "mattanaresh"
-        password: "Mnskri@2015"
+        email: ""
+        username: ""
+        password: ""
 
     - name: Pull the image
       docker_image:
