@@ -1,0 +1,80 @@
+Kubernetes helps to manage containers. It is container orchestrization tool.
+Kubernetes & Docker is prepared in GO language.
+We can roll back to old code using K8s
+In K8s we call it as Manifest. We need to prepare a manifest with container details and kubernetes takes care of it.
+In K8s we call as K8s cluster just like docker swarm.
+Master in K8s spins up the containers on nodes.
+In docker if we run containers, master runs the containers. But in K8s, master is just for management and only nodes runs container. With a setting we can run on master as well but it is not recemmended.
+
+Master:
+Important things is api server, whenever we are communication with master, in master node we have acomponent called api server. Whenever we give a request, api server gets those requests. Manifest directly goes to api server and that accepts the manifest.
+CLuster store saves the configuration details like number of containers we are running, state of container, images we are using etc. are saved in cluster store.
+Controller mantains the desired state. It check the stae of the containers like if we want to runn 10 containers and all of a sudden if a container carsed. Then this launch container again thus maintainig desired state.
+Scheduler schedules where to run our container.
+
+Above are 4 important components of a master.
+
+We run kubernetes commands using kubectl command line utility.
+
+Nodes:
+Node will have kubelet which communicates with master. 
+Container engine like docker should be there.
+To manage nwtworking, there is a component to manage networks called kube-proxy. If we create a service in k8s, kube-proxy manages networks and do load balancing.
+
+In docker, we give instruction to swarm manager using YML language. In K8s as well we use YML to write manifests.
+Then we give that manifest to api-server. Manifest follows a declarative model.
+
+
+Docker                Kubernetes
+Swarm                 K8S Cluster
+manager/worker        master/node
+Compose File          manifest
+Containers            pods
+inspect               describe
+
+In K8s, pod is a set of containers. There can be 1 or multiple containers in pod. In K8s, we create pods with only 1 app & 1 web container. Usually we run a pod with 1 app/container and if we want to run same multiple times, we just scale pods rather than bringing them individually.
+
+In docker everyting is a single software where as in K8s master and node will have different softwares to install.
+
+K8s do not provide netwrok by default. We need to install on it our own. There are many K8s netwroks and we used flannel network here.
+
+When we run kubectl get pods --all-name-spaces, then by default we get the pods running like, api-server, proxy, cluster, scheduler, flannel etc. which are part of masster.
+
+kubectl create -f pod.yml ---> TO create pod
+
+Kubernetes also follows yml syntax.
+
+kubectl get nodes ---> Gives nodes info in the K8S Cluster
+kubectl delete pod firstpod ---> removes pods
+
+We can group togather all the pods using service:
+kubectl expose rc first-rc --name=hello-svc --target-port=8080 --type=NodePort
+kubectl describe svc hello-svc ---> use this command to check the exposed port
+Range of port numbers in K8s - 30000-32767
+kubectl get svc ---> list all services
+kubectl delete svc hello-svc
+Insetad of creating replicas and creating service, we can run a service in single go with service ---> kind: Service
+
+We can use same port number irrespective of the number of nodes.
+
+kubectl get ep
+Shows the 
+kubectl describe ep hello-svcend points. Whenever user access using exposed port, k82 internally routs to endpoint
+
+kubectil delete rc first-rc ---> delete replication controllers
+
+Deployments: This is the once we use in prod environments.
+kind: Deployment but rest of the yml content is same.
+We can do application deployment and rollbacks.
+We can do rolling updates by deploying one after the other instead of all at a once.
+
+when we are making changes during rolling updates use
+kubectl apply -f deploy.yml --record
+kubectl rollout status deployments hello-deploy
+kubectl get deploy ---? deployment status
+
+In K8s we can go back to any verion whereas in docker it goes only to previous state. this is biggest advantage of K8s
+
+Once we deploy latest version old version will come down.
+
+kubectl rollout undo deployment hello-deploy --to-revision=1 --> rollback to version mentioned.
